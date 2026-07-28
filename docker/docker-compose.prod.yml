@@ -1,0 +1,180 @@
+# Brontolano Business Suite - Production Docker Compose
+
+services:
+  # Auth Service
+  auth:
+    build:
+      context: ./apps/auth
+      dockerfile: Dockerfile
+    image: brontolano/auth:${AUTH_VERSION:-latest}
+    container_name: brontolano-auth
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRES: ${JWT_ACCESS_EXPIRES:-3600}
+      JWT_REFRESH_EXPIRES: ${JWT_REFRESH_EXPIRES:-86400}
+    ports:
+      - "3001:3001"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # CRM Service
+  crm:
+    build:
+      context: ./apps/crm
+      dockerfile: Dockerfile
+    image: brontolano/crm:${CRM_VERSION:-latest}
+    container_name: brontolano-crm
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+    ports:
+      - "3002:3002"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  # Sales Service
+  sales:
+    build:
+      context: ./apps/sales
+      dockerfile: Dockerfile
+    image: brontolano/sales:${SALES_VERSION:-latest}
+    container_name: brontolano-sales
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    ports:
+      - "3003:3003"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # Inventory Service
+  inventory:
+    build:
+      context: ./apps/inventory
+      dockerfile: Dockerfile
+    image: brontolano/inventory:${INVENTORY_VERSION:-latest}
+    container_name: brontolano-inventory
+    environment:
+      NODE_ENV: production
+      PORT: 3004
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-brontolano}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-brontolano}
+    ports:
+      - "3004:3004"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+      - minio
+
+  # Finance Service
+  finance:
+    build:
+      context: ./apps/finance
+      dockerfile: Dockerfile
+    image: brontolano/finance:${FINANCE_VERSION:-latest}
+    container_name: brontolano-finance
+    environment:
+      NODE_ENV: production
+      PORT: 3005
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    ports:
+      - "3005:3005"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # HR Service
+  hr:
+    build:
+      context: ./apps/hr
+      dockerfile: Dockerfile
+    image: brontolano/hr:${HR_VERSION:-latest}
+    container_name: brontolano-hr
+    environment:
+      NODE_ENV: production
+      PORT: 3006
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    ports:
+      - "3006:3006"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  # Notifications Service
+  notifications:
+    build:
+      context: ./apps/notifications
+      dockerfile: Dockerfile
+    image: brontolano/notifications:${NOTIFICATIONS_VERSION:-latest}
+    container_name: brontolano-notifications
+    environment:
+      NODE_ENV: production
+      PORT: 3007
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+    ports:
+      - "3007:3007"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - rabbitmq
+
+  # Web Frontend
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    image: brontolano/web:${WEB_VERSION:-latest}
+    container_name: brontolano-web
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      - auth
+      - crm
+
+networks:
+  brontolano-net:
+    driver: bridge

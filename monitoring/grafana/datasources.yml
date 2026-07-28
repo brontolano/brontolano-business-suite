@@ -1,0 +1,82 @@
+# Brontolano Business Suite - Grafana Datasources Configuration
+apiVersion: 1
+
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+  - name: Elasticsearch
+    orgId: 1
+  - name: PostgreSQL
+    orgId: 1
+
+datasources:
+  # Prometheus Datasource
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    version: 1
+    editable: false
+    jsonData:
+      timeInterval: 15s
+      queryTimeout: 30s
+      httpMethod: POST
+      prometheusType: "Prometheus"
+      prometheusVersion: "2.45.0"
+      cacheLevel: "High"
+      incrementalQuerying: true
+      incrementalQueryOverlapWindow: "10m"
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          url: "http://localhost:16686/trace/${trace_id}"
+
+  # Elasticsearch Datasource (for log analytics)
+  - name: Elasticsearch
+    type: elasticsearch
+    access: proxy
+    url: http://elasticsearch:9200
+    database: "brontolano-logs-*"
+    jsonData:
+      interval: Daily
+      timeField: "@timestamp"
+      esVersion: "8.9.0"
+      maxConcurrentShardRequests: 5
+      logAnalytics: true
+      includeFrozen: true
+      tlsSkipVerify: true
+    version: 1
+    editable: false
+
+  # PostgreSQL Datasource
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: brontolano
+    user: brontolano
+    secureJsonData:
+      password: "${POSTGRES_PASSWORD}"
+    jsonData:
+      sslmode: "disable"
+      postgresVersion: 1500
+      timescaledb: false
+      maxOpenConns: 25
+      maxIdleConns: 5
+      connMaxLifetime: "14400m"
+    version: 1
+    editable: false
+
+  # InfluxDB Datasource (optional for time-series data)
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    database: brontolano
+    version: 1
+    editable: false
+    jsonData:
+      httpMode: GET
+      httpHeaderName: "Authorization"
+    secureJsonData:
+      httpHeaderValue: "Token ${INFLUXDB_TOKEN}"

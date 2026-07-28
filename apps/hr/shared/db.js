@@ -1,0 +1,45 @@
+const { Pool } = require('pg');
+
+let pool = null;
+
+function getPool() {
+  if (!pool) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    });
+    pool.on('error', (err) => {
+      console.error('Unexpected DB pool error:', err);
+    });
+  }
+  return pool;
+}
+
+async function query(text, params) {
+  const client = await getPool().connect();
+  try {
+    const result = await client.query(text, params);
+    return result;
+  } finally {
+    client.release();
+  }
+}
+
+async function transaction(callback) {
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { getPool, query, transaction };

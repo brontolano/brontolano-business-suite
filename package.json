@@ -1,0 +1,33 @@
+{
+  "name": "@brontolano/brontolano-business-suite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Complete ERP & CRM Solution for Businesses",
+  "main": "apps/web/index.js",
+  "scripts": {
+    "start": "docker-compose -f docker/docker-compose.prod.yml up -d",
+    "down": "docker-compose -f docker/docker-compose.prod.yml down",
+    "build": "./build.sh",
+    "restart": "docker-compose -f docker/docker-compose.prod.yml restart",
+    "logs": "docker-compose -f docker/docker-compose.prod.yml logs -f",
+    "logs-auth": "docker-compose -f docker/docker-compose.prod.yml logs -f auth",
+    "health": "curl -s http://localhost:3001/health && echo " | grep -q \"healthy\" && echo "✅ Auth Service Healthy" || echo "❌ Auth Service Unhealthy"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brontolano/brontolano-business-suite.git"
+  },
+  "keywords": [
+    "erp",
+    "crm",
+    "business-management",
+    "docker",
+    "nestjs",
+    "react",
+    "postgresql",
+    "redis",
+    "rabbitmq"
+  ],
+  "author": "Brontolano Business Suite Team",
+  "license": "MIT"
+}

@@ -1,0 +1,152 @@
+# Brontolano Business Suite - Prometheus Configuration
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    monitor: "brontolano-monitor"
+    environment: "production"
+
+# Alerting rules configuration
+rule_files:
+  - "alerts.yml"
+
+# Scrape configuration
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Auth Service
+  - job_name: "brontolano-auth"
+    scrape_interval: 10s
+    metrics_path: /health
+    static_configs:
+      - targets: ["auth:3001"]
+        labels:
+          service: "auth"
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "(.*)"
+        target_label: service_name
+        replacement: "auth"
+
+  # CRM Service
+  - job_name: "brontolano-crm"
+    scrape_interval: 10s
+    metrics_path: /health
+    static_configs:
+      - targets: ["crm:3002"]
+        labels:
+          service: "crm"
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "(.*)"
+        target_label: service_name
+        replacement: "crm"
+
+  # Sales Service
+  - job_name: "brontolano-sales"
+    scrape_interval: 10s
+    metrics_path: /health
+    static_configs:
+      - targets: ["sales:3003"]
+        labels:
+          service: "sales"
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: "(.*)"
+        target_label: service_name
+        replacement: "sales"
+
+  # Inventory Service
+  - job_name: "brontolano-inventory"
+    scrape_interval: 10s
+    metrics_path: /health
+    static_configs:
+      - targets: ["inventory:3004"]
+        labels:
+          service: "inventory"
+
+  # Finance Service
+  - job_name: "brontolano-finance"
+    scrape_interval: 10s
+    metrics_path: /health
+    static_configs:
+      - targets: ["finance:3005"]
+        labels:
+          service: "finance"
+
+  # HR Service
+  - job_name: "brontolano-hr"
+    scrape_interval: 10s
+    metrics_path: /health
+    static_configs:
+      - targets: ["hr:3006"]
+        labels:
+          service: "hr"
+
+  # Notifications Service
+  - job_name: "brontolano-notifications"
+    scrape_interval: 10s
+    metrics_path: /health
+    static_configs:
+      - targets: ["notifications:3007"]
+        labels:
+          service: "notifications"
+
+  # Web Frontend
+  - job_name: "brontolano-web"
+    scrape_interval: 15s
+    metrics_path: /health
+    static_configs:
+      - targets: ["web:3000"]
+        labels:
+          service: "web"
+
+  # PostgreSQL Database
+  - job_name: "postgres"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+        labels:
+          service: "database"
+
+  # Redis Cache
+  - job_name: "redis"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+        labels:
+          service: "cache"
+
+  # RabbitMQ Message Broker
+  - job_name: "rabbitmq"
+    scrape_interval: 15s
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["rabbitmq:15672"]
+        labels:
+          service: "message_queue"
+
+  # Node Exporter (Host Metrics)
+  - job_name: "node"
+    scrape_interval: 30s
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  # MinIO Object Storage
+  - job_name: "minio"
+    scrape_interval: 15s
+    metrics_path: /minio/v2/metrics/cluster
+    static_configs:
+      - targets: ["minio:9000"]
+        labels:
+          service: "object_storage"
+
+alerting:
+  alertmanagers:
+    - scheme: http
+      static_configs:
+        - targets: ["alertmanager:9093"]

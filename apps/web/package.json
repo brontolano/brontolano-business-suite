@@ -1,0 +1,32 @@
+{
+  "name": "@brontolano/web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "@tanstack/react-query": "latest",
+    "@reduxjs/toolkit": "latest",
+    "react-redux": "latest",
+    "clsx": "latest",
+    "tailwindcss": "latest",
+    "autoprefixer": "latest",
+    "lucide-react": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "^5.3.3",
+    "tailwindcss": "latest",
+    "eslint": "latest",
+    "eslint-config-next": "latest"
+  }
+}

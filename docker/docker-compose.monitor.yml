@@ -1,0 +1,141 @@
+# Brontolano Business Suite - Monitoring Stack
+
+services:
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: brontolano-prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-admin-api'
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+
+  # Node Exporter (Server metrics)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: brontolano-node-exporter
+    pid: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: brontolano-grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: postgres:5432
+      GF_DATABASE_NAME: grafana
+      GF_DATABASE_USER: ${POSTGRES_USER:-brontolano}
+      GF_DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+    ports:
+      - "3000:3000"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    container_name: brontolano-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+
+  # Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.9.0
+    container_name: brontolano-kibana
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      SERVER_NAME: kibana
+    ports:
+      - "5601:5601"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+
+  # Logstash
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.9.0
+    container_name: brontolano-logstash
+    volumes:
+      - ./monitoring/elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "5000:5000"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+
+  # Web App with monitoring labels
+  web:
+    image: brontolano/web:${WEB_VERSION:-latest}
+    container_name: brontolano-web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.web.loadbalancer.server.port=3000"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+
+  # Auth Service with monitoring labels
+  auth:
+    image: brontolano/auth:${AUTH_VERSION:-latest}
+    container_name: brontolano-auth-monitor
+    labels:
+      - "traefik.enable=true"
+    networks:
+      - brontolano-net
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  elasticsearch_data:
+
+networks:
+  brontolano-net:
+    external: true

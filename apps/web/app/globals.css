@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 14%;
+    --card-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 224 76% 48%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-gray-800;
+  }
+  body {
+    @apply bg-gray-950 text-gray-100 antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-gray-900/60 backdrop-blur-xl border border-gray-800/50 rounded-2xl shadow-xl;
+  }
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:border-brand-500/30 hover:shadow-brand-500/5 hover:shadow-2xl;
+  }
+  .gradient-border {
+    @apply relative overflow-hidden rounded-2xl;
+  }
+  .gradient-border::before {
+    content: '';
+    @apply absolute inset-0 rounded-2xl p-[1px];
+    background: linear-gradient(135deg, rgba(59,130,246,0.5), rgba(99,102,241,0.2), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  .stats-card {
+    @apply glass-card p-6 transition-all duration-300 hover:translate-y-[-2px];
+  }
+  .nav-link {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-400 hover:text-white hover:bg-gray-800/60;
+  }
+  .nav-link-active {
+    @apply nav-link text-brand-400 bg-brand-500/10 border border-brand-500/20;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-600/20 transition-all duration-200 hover:bg-brand-500 hover:shadow-brand-500/30 active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-xl bg-gray-800 px-5 py-2.5 text-sm font-semibold text-gray-200 border border-gray-700 transition-all duration-200 hover:bg-gray-700 hover:text-white;
+  }
+  .input-field {
+    @apply w-full rounded-xl border border-gray-800 bg-gray-900/50 px-4 py-2.5 text-sm text-gray-100 placeholder-gray-500 outline-none transition-all duration-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .badge-success { @apply badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20; }
+  .badge-warning { @apply badge bg-amber-500/10 text-amber-400 border border-amber-500/20; }
+  .badge-danger { @apply badge bg-red-500/10 text-red-400 border border-red-500/20; }
+  .badge-info { @apply badge bg-sky-500/10 text-sky-400 border border-sky-500/20; }
+  .badge-neutral { @apply badge bg-gray-600/10 text-gray-400 border border-gray-600/20; }
+}
